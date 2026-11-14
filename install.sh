@@ -6,7 +6,7 @@
 #   sudo DOMAIN=toko.contoh.com SSL_EMAIL=kamu@email.com bash install.sh   # + HTTPS Let's Encrypt
 set -euo pipefail
 
-REPO_URL="${REPO_URL:-https://github.com/Chizuhouse/chizuhouse.git}"
+REPO_URL="${REPO_URL:-https://github.com/khanhecate/chizuhouse.git}"
 APP_DIR="${APP_DIR:-/var/www/chizuhouse}"
 DB_NAME="${DB_NAME:-chizuhouse}"
 DB_USER="${DB_USER:-chizu}"

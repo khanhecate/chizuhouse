@@ -37,7 +37,7 @@ Port 80 (dan 443 untuk HTTPS) harus terbuka di firewall VPS dan di panel provide
 
 ```bash
 ssh root@IP_VPS
-git clone https://github.com/Chizuhouse/chizuhouse.git
+git clone https://github.com/khanhecate/chizuhouse.git
 cd chizuhouse
 sudo bash install.sh
 ```
@@ -74,7 +74,7 @@ Setelah selesai, buka `http://IP_VPS`, daftar lewat `register.php`, lalu login.
 sudo apt update
 sudo apt install -y apache2 mariadb-server git php libapache2-mod-php php-mysql php-mbstring php-xml
 
-sudo git clone https://github.com/Chizuhouse/chizuhouse.git /var/www/chizuhouse
+sudo git clone https://github.com/khanhecate/chizuhouse.git /var/www/chizuhouse
 
 sudo mysql <<'SQL'
 CREATE DATABASE chizuhouse CHARACTER SET utf8mb4;
