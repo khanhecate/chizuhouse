@@ -4,6 +4,20 @@ Website toko makanan Chizu House: katalog produk, keranjang belanja, serta regis
 
 **Stack:** PHP (mysqli), MariaDB/MySQL, HTML/CSS/JavaScript.
 
+## Preview
+
+**Beranda**
+
+![Beranda Chizu House](docs/screenshots/01-beranda.png)
+
+**Daftar menu**
+
+![Daftar menu](docs/screenshots/02-menu.png)
+
+**Keranjang belanja dan pembayaran QRIS**
+
+![Keranjang dan pembayaran QRIS](docs/screenshots/03-keranjang-qris.png)
+
 ## Struktur
 
 ```
