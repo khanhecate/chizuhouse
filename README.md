@@ -28,6 +28,7 @@ register.php         Registrasi akun
 logout.php           Logout
 koneksi.php          Koneksi database
 database.sql         Skema database
+config.local.example.php  Contoh konfigurasi (default XAMPP)
 install.sh           Installer otomatis untuk Ubuntu
 css/ js/ assets/     Aset statis
 ```
@@ -82,6 +83,57 @@ Script aman dijalankan ulang. Password database yang sudah ada dipakai lagi.
 
 Setelah selesai, buka `http://IP_VPS`, daftar lewat `register.php`, lalu login.
 
+## Instalasi di XAMPP (Windows & macOS)
+
+Untuk menjalankan di komputer lokal tanpa Docker. Unduh XAMPP dengan PHP 8.1 atau lebih baru dari https://www.apachefriends.org.
+
+### Windows
+
+1. Install XAMPP (default `C:\xampp`). Buka **XAMPP Control Panel**, lalu klik **Start** pada **Apache** dan **MySQL**.
+2. Taruh project di `C:\xampp\htdocs\chizuhouse`:
+   ```bat
+   cd C:\xampp\htdocs
+   git clone https://github.com/khanhecate/chizuhouse.git
+   ```
+   Tanpa Git, unduh ZIP dari GitHub lalu ekstrak ke `C:\xampp\htdocs\chizuhouse`.
+3. Buat database. Buka http://localhost/phpmyadmin, pilih tab **Import**, pilih file `database.sql` dari folder project, lalu klik **Import**. Database `chizuhouse` dan tabel `users` akan terbuat.
+4. Salin `config.local.example.php` menjadi `config.local.php`:
+   ```bat
+   cd C:\xampp\htdocs\chizuhouse
+   copy config.local.example.php config.local.php
+   ```
+5. Buka http://localhost/chizuhouse/, daftar lewat **Masuk**, lalu login.
+
+### macOS
+
+1. Install XAMPP (`.dmg`, terpasang di `/Applications/XAMPP`). Buka **manager-osx**, tab **Manage Servers**, lalu **Start** pada **Apache Web Server** dan **MySQL Database**.
+2. Taruh project di folder htdocs:
+   ```bash
+   cd /Applications/XAMPP/xamppfiles/htdocs
+   sudo git clone https://github.com/khanhecate/chizuhouse.git
+   ```
+   Kalau Git meminta login karena repo private, pakai token GitHub atau unduh ZIP.
+3. Buat database lewat terminal:
+   ```bash
+   /Applications/XAMPP/xamppfiles/bin/mysql -u root < /Applications/XAMPP/xamppfiles/htdocs/chizuhouse/database.sql
+   ```
+   Atau lewat http://localhost/phpmyadmin, tab **Import**, file `database.sql`.
+4. Salin file konfigurasi:
+   ```bash
+   cd /Applications/XAMPP/xamppfiles/htdocs/chizuhouse
+   sudo cp config.local.example.php config.local.php
+   ```
+5. Buka http://localhost/chizuhouse/, daftar lewat **Masuk**, lalu login.
+
+### Masalah umum di XAMPP
+
+- **`Koneksi database gagal` atau host `web-project-db` tidak ditemukan:** `config.local.php` belum dibuat (langkah 4). Tanpa file itu, aplikasi memakai default Docker.
+- **`Access denied for user 'root'`:** kamu sudah memberi password pada root MySQL. Isi `$pass` di `config.local.php`.
+- **`Unknown database 'chizuhouse'`:** `database.sql` belum diimpor.
+- **Apache tidak mau start (port 80 dipakai):** di Windows biasanya IIS, Skype, atau World Wide Web Publishing Service. Hentikan layanan itu atau ubah port Apache di `httpd.conf` (`Listen 8080`), lalu buka http://localhost:8080/chizuhouse/.
+- **MySQL tidak mau start (port 3306 dipakai):** hentikan MySQL/MariaDB lain yang berjalan di komputer, atau ganti port di `my.ini` (Windows) / `my.cnf` (macOS).
+- **Halaman menampilkan kode PHP, bukan website:** buka lewat `http://localhost/...`, bukan dengan klik dua kali pada file `index.php`.
+
 ## Instalasi manual
 
 ```bash
@@ -116,7 +168,7 @@ Lalu arahkan `DocumentRoot` Apache ke `/var/www/chizuhouse` (lihat `install.sh` 
 `koneksi.php` membaca nilai berikut, dengan urutan prioritas dari rendah ke tinggi:
 1. Default untuk Docker (`web-project-db`, user `webuser`, database `chizuhouse`).
 2. Environment variable `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`.
-3. File `config.local.php` jika ada (dibuat oleh `install.sh`).
+3. File `config.local.php` jika ada. Dibuat otomatis oleh `install.sh`, atau salin dari `config.local.example.php` untuk XAMPP.
 
 ## Menjalankan dengan Docker (development)
 
