@@ -41,3 +41,31 @@ SELECT * FROM (
          'assets/images/pizza-springroll.jpg'
 ) AS seed
 WHERE NOT EXISTS (SELECT 1 FROM products);
+
+-- Pesanan dari checkout. Status: diterima -> diproses -> dikirim -> selesai (atau dibatalkan)
+CREATE TABLE IF NOT EXISTS orders (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED DEFAULT NULL,
+  total INT UNSIGNED NOT NULL DEFAULT 0,
+  status ENUM('diterima','diproses','dikirim','selesai','dibatalkan') NOT NULL DEFAULT 'diterima',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_orders_status (status),
+  INDEX idx_orders_created (created_at),
+  CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Nama dan harga disalin ke sini supaya riwayat tidak berubah saat menu diedit atau dihapus
+CREATE TABLE IF NOT EXISTS order_items (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_id INT UNSIGNED NOT NULL,
+  product_id INT UNSIGNED DEFAULT NULL,
+  name VARCHAR(100) NOT NULL,
+  price INT UNSIGNED NOT NULL,
+  qty INT UNSIGNED NOT NULL DEFAULT 1,
+  CONSTRAINT fk_items_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Untuk database lama yang dibuat sebelum alur status pesanan (MariaDB, aman dijalankan ulang)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE orders MODIFY status ENUM('diterima','diproses','dikirim','selesai','dibatalkan') NOT NULL DEFAULT 'diterima';

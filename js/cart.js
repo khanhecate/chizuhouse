@@ -148,16 +148,35 @@ function closePaymentModal() {
     }
 }
 
-// Fungsi konfirmasi pembayaran sukses menggunakan pop-up kustom
-function confirmPayment() {
+// Konfirmasi pembayaran: simpan pesanan ke server, lalu kosongkan keranjang
+let isSubmittingOrder = false;
+async function confirmPayment() {
+    if (isSubmittingOrder || cart.length === 0) return;
+    isSubmittingOrder = true;
+    const confirmBtn = document.querySelector('#payment-modal button[onclick="confirmPayment()"]');
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.style.opacity = '0.6'; }
+    let result;
+    try {
+        const response = await fetch('api/checkout.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+            body: JSON.stringify({ items: cart.map(item => ({ id: item.id, qty: item.quantity })) })
+        });
+        result = await response.json();
+    } catch (error) {
+        result = { ok: false, error: 'Tidak bisa terhubung ke server. Coba lagi.' };
+    }
+    isSubmittingOrder = false;
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.style.opacity = ''; }
+    if (!result.ok) {
+        showToast(result.error || 'Pesanan gagal disimpan.');
+        return;
+    }
     // Kosongkan keranjang
     cart = [];
     updateCart();
-    
-    // Tutup modal pembayaran QR
+    // Tutup modal pembayaran QR dan panel keranjang
     closePaymentModal();
-    
-    // Tutup panel keranjang
     const cartPanel = document.getElementById('cart-panel');
     const cartOverlay = document.getElementById('cart-overlay');
     if (cartPanel) cartPanel.classList.remove('active', 'show');
@@ -165,15 +184,17 @@ function confirmPayment() {
         cartOverlay.style.display = 'none';
         cartOverlay.style.pointerEvents = 'none';
     }
-
-    // Tampilkan modal pop-up sukses
+    // Tampilkan modal sukses dengan nomor pesanan
+    const orderText = document.getElementById('success-order-text');
+    if (orderText) {
+        orderText.innerText = 'Nomor pesanan #' + result.order_id + ' (' + formatRupiah(result.total) + '). Pantau statusnya di Pesanan Saya.';
+    }
     const successModal = document.getElementById('success-modal');
     if (successModal) {
         successModal.style.display = 'flex';
         successModal.style.pointerEvents = 'auto';
     }
 }
-
 // Fungsi untuk menutup modal pop-up sukses dan kembali normal
 function closeSuccessModal() {
     const successModal = document.getElementById('success-modal');

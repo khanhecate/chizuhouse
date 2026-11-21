@@ -28,8 +28,10 @@ register.php         Registrasi akun
 logout.php           Logout
 koneksi.php          Koneksi database
 database.sql         Skema database + menu awal
-admin/index.php      Panel admin (kelola menu)
+admin/               Panel admin: index.php (dashboard), menu.php, users.php, sales.php
 api/products.php     Daftar menu (JSON) untuk halaman toko
+api/checkout.php     Membuat pesanan dari keranjang
+pesanan.php          Halaman "Pesanan Saya" untuk pelanggan
 tools/create_admin.php  Buat/promosikan akun admin (CLI)
 assets/images/uploads/  Gambar menu yang diunggah admin
 config.local.example.php  Contoh konfigurasi (default XAMPP)
@@ -37,7 +39,7 @@ install.sh           Installer otomatis untuk Ubuntu
 css/ js/ assets/     Aset statis
 ```
 
-Database punya dua tabel: `users` (kolom `role`: `user` atau `admin`) dan `products`. Menu dimuat dari database lewat `api/products.php`. Keranjang tetap di JavaScript (`js/cart.js`).
+Database punya empat tabel: `users` (kolom `role`: `user` atau `admin`), `products`, `orders`, dan `order_items`. Menu dimuat dari database lewat `api/products.php`. Keranjang tetap di JavaScript (`js/cart.js`).
 
 ## Requirement
 
@@ -167,11 +169,25 @@ sudo chown -R www-data:www-data /var/www/chizuhouse
 
 Lalu arahkan `DocumentRoot` Apache ke `/var/www/chizuhouse` (lihat `install.sh` untuk contoh virtual host) dan jalankan `sudo systemctl reload apache2`.
 
-## Admin: kelola menu
+## Panel admin
 
-Admin bisa menambah menu baru, mengubah nama, kategori, harga, deskripsi, dan gambar, serta menghapus menu. Halamannya ada di `/admin/` (tombol **Admin** muncul di header setelah admin login). User biasa yang membuka `/admin/` mendapat 403.
+Halaman admin ada di `/admin/` (tombol **Admin** muncul di header setelah admin login). User biasa yang membukanya mendapat 403. Sidebar punya empat halaman:
 
-Gambar: JPG, PNG, atau WEBP, maksimal 2 MB. File disimpan di `assets/images/uploads/` dengan nama acak, dan dicek isinya (bukan hanya ekstensi).
+| Halaman | Fungsi |
+|---|---|
+| Dashboard | Ringkasan jumlah menu, user, pesanan lunas, total penjualan, dan 5 pesanan terbaru |
+| Tambah Menu | Tambah, edit, dan hapus menu: nama, kategori, harga, deskripsi, gambar |
+| Management User | Cari user, ubah nama/email/role, ganti password, hapus user. Admin tidak bisa menghapus atau menurunkan role akunnya sendiri |
+| Daftar Penjualan | Daftar pesanan beserta item dan total. Admin mengubah status pesanan lewat dropdown di tiap baris |
+
+## Alur pesanan
+
+1. Pelanggan login, mengisi keranjang, klik **Checkout**, scan QRIS, lalu klik **Konfirmasi Pembayaran**.
+2. Server menyimpan pesanan ke `orders` dan `order_items` dengan status **Pesanan Diterima**. Harga dihitung ulang di server dari tabel `products`, bukan dari browser.
+3. Admin membuka **Daftar Penjualan** dan mengubah status: Pesanan Diterima, Diproses, Dikirim, Selesai, atau Dibatalkan.
+4. Pelanggan memantau lewat tombol **Pesanan Saya** di header. Halaman itu menampilkan tahapan status dan diperbarui otomatis setiap 30 detik.
+
+Tombol Konfirmasi Pembayaran belum memverifikasi pembayaran ke QRIS. Admin perlu mencocokkan pembayaran masuk secara manual sebelum memproses pesanan.
 
 ### Membuat akun admin
 
@@ -188,7 +204,7 @@ Kalau `USERNAME` sudah terdaftar, akun itu dijadikan admin. Kalau belum, tambahk
 
 ### Upgrade dari versi sebelumnya
 
-Database lama perlu kolom `role` dan tabel `products`. Jalankan `database.sql` sekali lagi, aman untuk data yang ada dan tidak menduplikasi menu:
+Database lama perlu kolom `role` serta tabel `products`, `orders`, dan `order_items`. Jalankan `database.sql` sekali lagi, aman untuk data yang ada dan tidak menduplikasi menu:
 
 ```bash
 docker exec -i NAMA_CONTAINER_DB mariadb -uroot -pPASSWORD_ROOT < database.sql

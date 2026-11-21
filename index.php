@@ -1,5 +1,8 @@
 <?php
 session_start();
+if (empty($_SESSION['csrf'])) { $_SESSION['csrf'] = bin2hex(random_bytes(32)); }
+// URL aset diberi versi (waktu ubah file) supaya browser selalu memuat JS/CSS terbaru
+function asset(string $path): string { return $path . '?v=' . (@filemtime(__DIR__ . '/' . $path) ?: 1); }
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -14,9 +17,9 @@ session_start();
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/animation.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/animation.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/responsive.css') ?>">
 </head>
 <body>
 
@@ -39,6 +42,7 @@ session_start();
                 <!-- Tampilan Jika User Sudah Login -->
                 <div class="user-greeting" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: #d97706; font-size: 14px;">
                     <span>👋 Halo, <?php echo htmlspecialchars($_SESSION['full_name'] ?: $_SESSION['username']); ?></span>
+                    <a href="pesanan.php" style="text-decoration: none; padding: 4px 10px; font-size: 12px; background-color: #e9a900; color: #452414; border-radius: 4px;">Pesanan Saya</a>
                     <?php if (($_SESSION['role'] ?? '') === 'admin'): ?>
                         <a href="admin/" style="text-decoration: none; padding: 4px 10px; font-size: 12px; background-color: #452414; color: white; border-radius: 4px;">Admin</a>
                     <?php endif; ?>
@@ -193,10 +197,13 @@ session_start();
                 ✓
             </div>
 
-            <h3 style="margin-top: 0; font-family: 'Playfair Display', serif; color: #1f2937; font-size: 24px; margin-bottom: 10px;">Pembayaran Berhasil!</h3>
-            <p style="font-size: 15px; color: #6b7280; margin-bottom: 25px; line-height: 1.5;">Terima kasih telah berbelanja di Chizu House. Pesanan Anda sedang diproses.</p>
+            <h3 style="margin-top: 0; font-family: 'Playfair Display', serif; color: #1f2937; font-size: 24px; margin-bottom: 10px;">Pesanan Diterima!</h3>
+            <p id="success-order-text" style="font-size: 15px; color: #6b7280; margin-bottom: 25px; line-height: 1.5;">Terima kasih telah berbelanja di Chizu House.</p>
             
-            <button onclick="closeSuccessModal()" style="width: 100%; padding: 12px; background-color: #10b981; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 16px;">Selesai</button>
+            <div style="display: flex; gap: 10px;">
+                <a href="pesanan.php" style="flex: 1; padding: 12px; background-color: #d97706; color: white; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px;">Pesanan Saya</a>
+                <button onclick="closeSuccessModal()" style="flex: 1; padding: 12px; background-color: #10b981; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 15px;">Selesai</button>
+            </div>
         </div>
     </div>
     <!-- END MODAL POPUP SUKSES -->
@@ -224,12 +231,13 @@ session_start();
     <!-- VARIABEL STATUS LOGIN UNTUK JAVASCRIPT -->
     <script>
         const isUserLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
+        const csrfToken = <?php echo json_encode($_SESSION['csrf']); ?>;
     </script>
 
     <!-- JavaScript Files -->
-    <script src="js/products.js"></script>
-    <script src="js/cart.js"></script>
-    <script src="js/main.js"></script>
+    <script src="<?= asset('js/products.js') ?>"></script>
+    <script src="<?= asset('js/cart.js') ?>"></script>
+    <script src="<?= asset('js/main.js') ?>"></script>
 
 </body>
 </html>
