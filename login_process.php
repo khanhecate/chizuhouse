@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['full_name'] = $user['full_name'];
+            $_SESSION['role'] = $user['role'] ?? 'user';
 
             // Arahkan ke halaman utama toko
             header("Location: index.php");

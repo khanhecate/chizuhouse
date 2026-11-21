@@ -39,6 +39,9 @@ session_start();
                 <!-- Tampilan Jika User Sudah Login -->
                 <div class="user-greeting" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: #d97706; font-size: 14px;">
                     <span>👋 Halo, <?php echo htmlspecialchars($_SESSION['full_name'] ?: $_SESSION['username']); ?></span>
+                    <?php if (($_SESSION['role'] ?? '') === 'admin'): ?>
+                        <a href="admin/" style="text-decoration: none; padding: 4px 10px; font-size: 12px; background-color: #452414; color: white; border-radius: 4px;">Admin</a>
+                    <?php endif; ?>
                     <a href="logout.php" style="text-decoration: none; padding: 4px 10px; font-size: 12px; background-color: #ef4444; color: white; border-radius: 4px;">Keluar</a>
                 </div>
             <?php else: ?>
@@ -86,7 +89,7 @@ session_start();
                     <span class="eyebrow">PILIH FAVORITMU</span>
                     <h2>Temukan Favoritmu</h2>
                 </div>
-                <p>Empat pilihan lezat, satu harga spesial.</p>
+                <p>Pilihan lezat, satu harga spesial.</p>
             </div>
 
             <div class="category-list">

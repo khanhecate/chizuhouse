@@ -1,6 +1,6 @@
 # Chizu House
 
-Website toko makanan Chizu House: katalog produk, keranjang belanja, serta registrasi dan login pengguna.
+Website toko makanan Chizu House: katalog menu, keranjang belanja, registrasi dan login pengguna, serta **panel admin untuk menambah, mengedit, dan menghapus menu (nama, kategori, harga, gambar)**.
 
 **Stack:** PHP (mysqli), MariaDB/MySQL, HTML/CSS/JavaScript.
 
@@ -27,13 +27,17 @@ login_process.php    Proses login
 register.php         Registrasi akun
 logout.php           Logout
 koneksi.php          Koneksi database
-database.sql         Skema database
+database.sql         Skema database + menu awal
+admin/index.php      Panel admin (kelola menu)
+api/products.php     Daftar menu (JSON) untuk halaman toko
+tools/create_admin.php  Buat/promosikan akun admin (CLI)
+assets/images/uploads/  Gambar menu yang diunggah admin
 config.local.example.php  Contoh konfigurasi (default XAMPP)
 install.sh           Installer otomatis untuk Ubuntu
 css/ js/ assets/     Aset statis
 ```
 
-Database hanya punya satu tabel, `users`. Produk dan keranjang ada di JavaScript (`js/products.js`, `js/cart.js`).
+Database punya dua tabel: `users` (kolom `role`: `user` atau `admin`) dan `products`. Menu dimuat dari database lewat `api/products.php`. Keranjang tetap di JavaScript (`js/cart.js`).
 
 ## Requirement
 
@@ -42,7 +46,7 @@ Database hanya punya satu tabel, `users`. Produk dan keranjang ada di JavaScript
 | Ubuntu Server | 22.04 / 24.04 | VPS minimal 1 vCPU, 1 GB RAM |
 | Apache | 2.4 | Web server |
 | PHP | 8.1+ | Ekstensi: `mysqli` (paket `php-mysql`), `mbstring`, `xml` |
-| MariaDB | 10.6+ (atau MySQL 8) | Database |
+| MariaDB | 10.6+ | Database. MySQL belum didukung karena `database.sql` memakai `ADD COLUMN IF NOT EXISTS` |
 | Git, curl, openssl | - | Dipakai installer |
 | Certbot | opsional | HTTPS Let's Encrypt, perlu domain |
 
@@ -76,7 +80,7 @@ Installer akan:
 2. Menyalin source code ke `/var/www/chizuhouse`.
 3. Membuat database, user database, dan tabel dari `database.sql`. Password database dibuat acak.
 4. Menulis kredensial ke `config.local.php` (tidak masuk git, izin 640).
-5. Membuat virtual host Apache, menutup akses ke `config.local.php`, `database.sql`, dan `.git`.
+5. Membuat akun admin (lihat bagian Admin di bawah), lalu membuat virtual host Apache yang menutup akses ke `config.local.php`, `database.sql`, `tools/`, dan `.git`, serta mematikan eksekusi PHP di folder upload gambar.
 6. Membuka firewall `ufw` jika aktif, dan memasang sertifikat HTTPS jika `SSL_EMAIL` diisi.
 
 Script aman dijalankan ulang. Password database yang sudah ada dipakai lagi.
@@ -96,7 +100,7 @@ Untuk menjalankan di komputer lokal tanpa Docker. Unduh XAMPP dengan PHP 8.1 ata
    git clone https://github.com/khanhecate/chizuhouse.git
    ```
    Tanpa Git, unduh ZIP dari GitHub lalu ekstrak ke `C:\xampp\htdocs\chizuhouse`.
-3. Buat database. Buka http://localhost/phpmyadmin, pilih tab **Import**, pilih file `database.sql` dari folder project, lalu klik **Import**. Database `chizuhouse` dan tabel `users` akan terbuat.
+3. Buat database. Buka http://localhost/phpmyadmin, pilih tab **Import**, pilih file `database.sql` dari folder project, lalu klik **Import**. Database `chizuhouse` dan tabel `users` serta `products` akan terbuat.
 4. Salin `config.local.example.php` menjadi `config.local.php`:
    ```bat
    cd C:\xampp\htdocs\chizuhouse
@@ -163,6 +167,35 @@ sudo chown -R www-data:www-data /var/www/chizuhouse
 
 Lalu arahkan `DocumentRoot` Apache ke `/var/www/chizuhouse` (lihat `install.sh` untuk contoh virtual host) dan jalankan `sudo systemctl reload apache2`.
 
+## Admin: kelola menu
+
+Admin bisa menambah menu baru, mengubah nama, kategori, harga, deskripsi, dan gambar, serta menghapus menu. Halamannya ada di `/admin/` (tombol **Admin** muncul di header setelah admin login). User biasa yang membuka `/admin/` mendapat 403.
+
+Gambar: JPG, PNG, atau WEBP, maksimal 2 MB. File disimpan di `assets/images/uploads/` dengan nama acak, dan dicek isinya (bukan hanya ekstensi).
+
+### Membuat akun admin
+
+Akun admin dibuat lewat command line, tidak ada akun default.
+
+| Lingkungan | Cara |
+|---|---|
+| VPS Ubuntu | `install.sh` membuat admin otomatis dan menampilkan username + password di akhir. Ubah dengan `ADMIN_USER`, `ADMIN_EMAIL`, `ADMIN_PASS`. |
+| Docker | `docker exec NAMA_CONTAINER_WEB php /var/www/html/chizuhouse/tools/create_admin.php USERNAME` |
+| XAMPP | `php tools/create_admin.php USERNAME` (PHP ada di folder `xampp/php`) |
+| Lewat SQL | `UPDATE users SET role='admin' WHERE username='USERNAME';` |
+
+Kalau `USERNAME` sudah terdaftar, akun itu dijadikan admin. Kalau belum, tambahkan email dan password untuk membuat akun baru: `create_admin.php USERNAME EMAIL PASSWORD`. Setelah dijadikan admin, logout lalu login lagi supaya tombol Admin muncul.
+
+### Upgrade dari versi sebelumnya
+
+Database lama perlu kolom `role` dan tabel `products`. Jalankan `database.sql` sekali lagi, aman untuk data yang ada dan tidak menduplikasi menu:
+
+```bash
+docker exec -i NAMA_CONTAINER_DB mariadb -uroot -pPASSWORD_ROOT < database.sql
+```
+
+Di XAMPP, impor ulang `database.sql` lewat phpMyAdmin.
+
 ## Konfigurasi database
 
 `koneksi.php` membaca nilai berikut, dengan urutan prioritas dari rendah ke tinggi:
@@ -172,7 +205,7 @@ Lalu arahkan `DocumentRoot` Apache ke `/var/www/chizuhouse` (lihat `install.sh` 
 
 ## Menjalankan dengan Docker (development)
 
-Project ini bisa dijalankan di container PHP+Apache yang terhubung ke MariaDB. Buat database dengan `database.sql`:
+Project ini bisa dijalankan di container PHP+Apache yang terhubung ke MariaDB. Host database di `koneksi.php` secara default `shared-db`. Buat database dengan `database.sql`:
 
 ```bash
 docker exec -i NAMA_CONTAINER_DB mariadb -uroot -pPASSWORD_ROOT < database.sql
@@ -191,3 +224,5 @@ docker exec -i NAMA_CONTAINER_DB mariadb -uroot -pPASSWORD_ROOT < database.sql
 - Ganti password database default jika memakai Docker di server publik.
 - Aktifkan HTTPS (`SSL_EMAIL`) karena form login mengirim password.
 - Jangan commit `config.local.php`.
+- Jangan pakai password admin dari `install.sh` untuk jangka panjang. Buat akun sendiri dan ganti.
+- Jika folder `assets/images/uploads/` tidak bisa ditulis, upload gambar gagal. Di VPS: `sudo chown -R www-data:www-data /var/www/chizuhouse/assets/images/uploads`.

@@ -12,6 +12,9 @@ DB_NAME="${DB_NAME:-chizuhouse}"
 DB_USER="${DB_USER:-chizu}"
 DOMAIN="${DOMAIN:-_}"
 SSL_EMAIL="${SSL_EMAIL:-}"
+ADMIN_USER="${ADMIN_USER:-admin}"
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@localhost.local}"
+ADMIN_PASS="${ADMIN_PASS:-$(openssl rand -hex 8)}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ $EUID -ne 0 ]]; then
@@ -76,6 +79,10 @@ cat > "$CONFIG" <<PHP
 PHP
 chmod 640 "$CONFIG"
 
+echo "==> Buat akun admin ($ADMIN_USER)"
+ADMIN_RESULT="$(php "$APP_DIR/tools/create_admin.php" "$ADMIN_USER" "$ADMIN_EMAIL" "$ADMIN_PASS" 2>&1 || true)"
+echo "$ADMIN_RESULT"
+
 echo "==> [5/6] Konfigurasi Apache"
 chown -R www-data:www-data "$APP_DIR"
 find "$APP_DIR" -type d -exec chmod 755 {} \;
@@ -93,9 +100,16 @@ cat > /etc/apache2/sites-available/chizuhouse.conf <<CONF
         Require all granted
     </Directory>
 
-    <FilesMatch "^(config\.local\.php|database\.sql|install\.sh|\.gitignore)$">
+    <FilesMatch "^(config\.local\.php|config\.local\.example\.php|database\.sql|install\.sh|\.gitignore)$">
         Require all denied
     </FilesMatch>
+    <Directory ${APP_DIR}/tools>
+        Require all denied
+    </Directory>
+    # Folder upload gambar menu: script tidak boleh dieksekusi
+    <Directory ${APP_DIR}/assets/images/uploads>
+        php_admin_flag engine off
+    </Directory>
     RedirectMatch 404 /\.git
 
     ErrorLog \${APACHE_LOG_DIR}/chizuhouse_error.log
@@ -121,3 +135,8 @@ echo
 echo "Instalasi selesai."
 if [[ "$DOMAIN" != "_" ]]; then echo "Buka: http://${DOMAIN}"; else echo "Buka: http://${IP}"; fi
 echo "Database : ${DB_NAME}  | User: ${DB_USER}  | Password tersimpan di ${CONFIG}"
+if [[ "$ADMIN_RESULT" == *"dibuat"* ]]; then
+  echo "Admin    : ${ADMIN_USER} / ${ADMIN_PASS}   (halaman admin: /admin/ , segera ganti dengan akun sendiri)"
+else
+  echo "Admin    : ${ADMIN_RESULT}"
+fi

@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof renderProducts === 'function') renderProducts();
+    if (typeof loadProducts === 'function') loadProducts();
     if (typeof updateCart === 'function') updateCart();
 
     if ("IntersectionObserver" in window) {

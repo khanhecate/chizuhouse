@@ -1,7 +1,7 @@
 <?php
-// Default: container Docker (web-project-db).
+// Default: container Docker (shared-db).
 // Di VPS, install.sh membuat config.local.php yang menimpa nilai ini.
-$host = getenv('DB_HOST') ?: "web-project-db";
+$host = getenv('DB_HOST') ?: "shared-db";
 $user = getenv('DB_USER') ?: "webuser";
 $pass = getenv('DB_PASS') ?: "webuser123";
 $db   = getenv('DB_NAME') ?: "chizuhouse";

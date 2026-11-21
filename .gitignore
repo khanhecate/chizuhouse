@@ -1,2 +1,5 @@
 .DS_Store
 config.local.php
+# Gambar menu yang diunggah admin (jangan hapus .htaccess)
+assets/images/uploads/*
+!assets/images/uploads/.htaccess
