@@ -1,9 +1,10 @@
 .admin-page { background: var(--cream); min-height: 100vh; }
-.admin-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 5%; background: var(--white); border-bottom: 1px solid var(--border); }
+.admin-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 32px; background: var(--white); border-bottom: 1px solid var(--border); }
 .admin-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--orange); }
 .admin-brand img { width: 40px; height: 40px; border-radius: 50%; }
 .admin-user { margin-right: 10px; font-weight: 600; }
-.admin-main { max-width: 1000px; margin: 28px auto; padding: 0 5%; display: grid; gap: 24px; }
+.admin-main { width: 100%; margin: 0; padding: 24px 32px; display: grid; gap: 24px; align-items: start; }
+.admin-flash { grid-column: 1 / -1; }
 .admin-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
 .admin-card h2 { margin-bottom: 16px; font-family: 'Playfair Display', serif; }
 .admin-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
@@ -26,4 +27,10 @@
 .admin-thumb { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; }
 .admin-row-actions { white-space: nowrap; }
 .admin-row-actions form { display: inline; }
-@media (max-width: 720px) { .admin-form { grid-template-columns: 1fr; } }
+/* Layar lebar: form di kiri, daftar menu memenuhi sisanya */
+@media (min-width: 1100px) {
+    .admin-main { grid-template-columns: 380px minmax(0, 1fr); }
+    .admin-main > .admin-card:first-of-type { position: sticky; top: 16px; }
+    .admin-main .admin-form { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) { .admin-main { padding: 16px; } .admin-header { padding: 12px 16px; } .admin-form { grid-template-columns: 1fr; } }
